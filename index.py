@@ -33,7 +33,6 @@ from urllib.parse import unquote_plus
 from urllib.parse import urlparse, unquote
 import urllib.parse
 from model import convert_avi_to_mp4
-
 app = Flask(__name__)
 api = Api(app)
 CORS(app) 
@@ -146,6 +145,9 @@ def store_to_database(names):
 def upload_image():
     cls = YoloEffect()
     file = request.files['image']
+    low_res = request.form['low_res']
+    print(low_res)
+
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     try:
@@ -153,16 +155,9 @@ def upload_image():
         file.filename = randname
         file.save(os.path.join('', file.filename))
         names = []
-        
-        ret , clss, sizes= cls.cut(file.filename)
+        ret , clss, sizes= cls.cut(file.filename, low_res)
         for _ in ret: names.append(_)
         ret = cls.redirect(ret)
-        # os.path.dirname(os.path.abspath(__file__))
-        
-        #GANs
-        
-       
-        
         
         return jsonify({'message':ret,'classes': clss,'sizes': sizes ,'status':200})
     except Exception as e:
@@ -176,6 +171,8 @@ def upload_image():
 def upload_video():
     cls = YoloEffect()
     file = request.files['image']
+    low_res = request.form['low_res']
+    print(low_res)
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
     try:
@@ -183,7 +180,7 @@ def upload_video():
         randname = cls.generate_randomname() + ".mp4" # to generate name
         file.filename = randname  # rename the file
         file.save(os.path.join('', file.filename)) # save the file beside this file
-        ret , size = cls.segment(file.filename)
+        ret , size = cls.segment(file.filename, low_res)
         return jsonify({"ret": ret, 'size':size,'status':200})
     except Exception as e:
         return jsonify({'error': f'Failed to save file - {str(e)}'}), 500
@@ -250,8 +247,16 @@ def serve_media(filename):
 @app.route('/')
 def hello():
     return f'Hi Abdul'
+import time
+
+@app.route('/long_task')
+@cross_origin(origin="http://localhost:3000")
+def long_task():
+    return "Task completed!", 200
 
 if __name__ == '__main__':
+    from waitress import serve
+    # serve(app, host='127.0.0.1', port=5000, threads=1)
     app.run(port=5000, debug=True)
     
     
