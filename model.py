@@ -118,11 +118,11 @@ class YoloEffect:
 
 
 
- def cut(self, imgname, low_res):
+ def cut(self, imgname, low_res, Yolo = False):
   ret = []  
   clss = ["original"]
   
-  model = YOLO("yolov8n.pt")
+  model = YOLO("yolov5lu.pt")
   res = model(imgname, show=False)
   cv2.waitKey(0)
   c = 0
@@ -130,37 +130,38 @@ class YoloEffect:
   img_name = self.generate_randomname()
   file_path = os.path.join(media_folder, f"{img_name}{c}.jpg")
   cv2.imwrite(file_path, image)
-  
-  ret.append(media_folder+img_name + f"{c}" + ".jpg")
 
-  for i in res[0].boxes.data:
-      print("lowres = ", low_res)
-      c += 1
-      original_image = cv2.imread(imgname)
-      if classNames[int(res[0].boxes.cls[c - 1])] not in allowed_classes: continue
-      x, y, w, h = math.floor(i[0]), math.floor(i[1]), math.floor(i[2]), math.floor(i[3])
-      cropped_image = original_image[y:h, x:w]
-      img_name = self.generate_randomname()      
-      file_path = os.path.join(media_folder, f"{img_name}{c}.jpg")
-      cv2.imwrite(file_path, cropped_image)
-      ret.append(media_folder+img_name + f"{c}" + ".jpg")
-      clss.append(classNames[int(res[0].boxes.cls[c - 1])])
+  ret.append(media_folder+img_name + f"{c}" + ".jpg" )
+  print("Yolo = ",Yolo)
+  if Yolo == "true":
+      for i in res[0].boxes.data:
+          print("############################")
+          print("lowres = ", low_res)
+          c += 1
+          original_image = cv2.imread(imgname)
+          if classNames[int(res[0].boxes.cls[c - 1])] not in allowed_classes: continue
+          x, y, w, h = math.floor(i[0]), math.floor(i[1]), math.floor(i[2]), math.floor(i[3])
+          cropped_image = original_image[y:h, x:w]
+          img_name = self.generate_randomname()      
+          file_path = os.path.join(media_folder, f"{img_name}{c}.jpg")
+          cv2.imwrite(file_path, cropped_image)
+          ret.append(media_folder+img_name + f"{c}" + ".jpg")
+          clss.append(classNames[int(res[0].boxes.cls[c - 1])])
   
   file_path = os.path.join('', imgname) 
 
-
   if os.path.exists(file_path):
       os.remove(file_path)
-
-
- 
+  print("after loop")
+  retbefore = []
   for i in range(len(ret)):
       print("cur = ",ret[i])
+      retbefore.append(ret[i])
       newname = media_folder+self.generate_randomname()+".jpg"
       Generate_image(ret[i], newname, low_res)
-      os.remove(ret[i])
+    #   os.remove(ret[i])
       ret[i] = newname
       
   sizes = [os.path.getsize(i) for i in ret]
-  return ret, clss, sizes
+  return ret, clss, sizes, retbefore
   

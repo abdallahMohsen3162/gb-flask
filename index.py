@@ -146,6 +146,7 @@ def upload_image():
     cls = YoloEffect()
     file = request.files['image']
     low_res = request.form['low_res']
+    yolo = request.form['yolo']
     print(low_res)
 
     if file.filename == '':
@@ -155,11 +156,12 @@ def upload_image():
         file.filename = randname
         file.save(os.path.join('', file.filename))
         names = []
-        ret , clss, sizes= cls.cut(file.filename, low_res)
+        ret , clss, sizes, retbefore = cls.cut(file.filename, low_res,yolo)
         for _ in ret: names.append(_)
         ret = cls.redirect(ret)
+        retbefore = cls.redirect(retbefore)
         
-        return jsonify({'message':ret,'classes': clss,'sizes': sizes ,'status':200})
+        return jsonify({'message':ret, 'retbefore':retbefore ,'classes': clss,'sizes': sizes ,'status':200})
     except Exception as e:
         return jsonify({'error': f'Failed to save file - {str(e)}'}), 500
     
